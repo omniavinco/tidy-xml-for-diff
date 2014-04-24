@@ -1127,6 +1127,7 @@ static void PPrintAttribute( TidyDocImpl* doc, uint indent,
     Bool indAttrs  = cfgBool( doc, TidyIndentAttributes );
     uint xtra      = AttrIndent( doc, node, attr );
     Bool first     = AttrNoIndentFirst( /*doc,*/ node, attr );
+    Bool tidyForDiff = cfgBool(doc, TidyForDiff);
     tmbstr name    = attr->attribute;
     Bool wrappable = no;
     tchar c;
@@ -1164,6 +1165,9 @@ static void PPrintAttribute( TidyDocImpl* doc, uint indent,
     {
         AddChar( pprint, ' ' );
     }
+
+    if (tidyForDiff)
+        PCondFlushLine( doc, indent + xtra );
 
     /* Attribute name */
     while (*name)
@@ -1309,6 +1313,7 @@ static void PPrintTag( TidyDocImpl* doc,
     Bool uc = cfgBool( doc, TidyUpperCaseTags );
     Bool xhtmlOut = cfgBool( doc, TidyXhtmlOut );
     Bool xmlOut = cfgBool( doc, TidyXmlOut );
+    Bool forDiff = cfgBool( doc, TidyForDiff );
     tchar c;
     tmbstr s = node->element;
 
@@ -1338,8 +1343,34 @@ static void PPrintTag( TidyDocImpl* doc,
     if ( (xmlOut || xhtmlOut) &&
          (node->type == StartEndTag || TY_(nodeCMIsEmpty)(node)) )
     {
-        AddChar( pprint, ' ' );   /* Space is NS compatibility hack <br /> */
-        AddChar( pprint, '/' );   /* Required end tag marker */
+        if (!forDiff)
+        {
+            AddChar(pprint, ' ');   /* Space is NS compatibility hack <br /> */
+            AddChar(pprint, '/');   /* Required end tag marker */
+        }
+        else
+        {
+            AddChar(pprint, '>');
+            PCondFlushLine(doc, indent);
+            AddChar(pprint, '<');
+            AddChar(pprint, '/');
+            s = node->element;
+            if (s)
+            {
+                while (*s)
+                {
+                    c = (unsigned char)*s;
+
+                    if (c > 0x7F)
+                        s += TY_(GetUTF8)(s, &c);
+                    else if (uc)
+                        c = TY_(ToUpper)(c);
+
+                    AddChar(pprint, c);
+                    ++s;
+                }
+            }
+        }
     }
 
     AddChar( pprint, '>' );

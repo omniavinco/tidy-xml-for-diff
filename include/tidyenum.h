@@ -202,6 +202,7 @@ typedef enum
   TidyDecorateInferredUL,  /**< Mark inferred UL elements with no indent CSS */
   TidyPreserveEntities,    /**< Preserve entities */
   TidySortAttributes,      /**< Sort attributes */
+  TidyForDiff,             /**< Split attribute and endtag by line */
   TidyMergeSpans,       /**< Merge multiple SPANs */
   TidyAnchorAsName,    /**< Define anchors as name attributes */
   N_TIDY_OPTIONS       /**< Must be last */
